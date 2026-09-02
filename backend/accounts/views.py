@@ -1,4 +1,6 @@
 import os
+import jwt
+import requests as http_requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -10,9 +12,9 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import MFAChallenge, PasswordResetToken
-from .serializers import ForgotPasswordSerializer, RegisterSerializer, ResetPasswordSerializer, UserSerializer
-from .services import hash_reset_token, issue_password_reset
+from .models import LoginSession, MFAChallenge, PasswordResetToken
+from .serializers import ForgotPasswordSerializer, LoginSessionSerializer, RegisterSerializer, ResetPasswordSerializer, UserSerializer
+from .services import get_client_ip, get_ip_location, hash_reset_token, issue_password_reset, parse_device_info
 from .email_service import EmailService
 from .mfa_service import available_methods, create_challenge, decrypt, device_for, encrypt, event, generate_recovery_codes, qr_data_url
 import hashlib, secrets, pyotp
@@ -34,17 +36,17 @@ def auth_result(user, request, is_new=False, event_name='PASSWORD_LOGIN'):
     event(user, event_name, request)
     if is_new: EmailService.safe_send('send_welcome_email', user)
     if settings.SEND_LOGIN_NOTIFICATION_EMAIL: EmailService.safe_send('send_login_notification', user, timezone.now(), request.META.get('REMOTE_ADDR', 'Unknown'))
-    return jwt_response(user)
+    return jwt_response(user, request)
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
     def post(self, request):
-        key=f"login:{request.META.get('REMOTE_ADDR','unknown')}"
-        if cache.get(key, 0) >= 10: return Response({'detail':'Too many sign-in attempts. Try again shortly.'}, status=429)
-        email=request.data.get('email',''); password=request.data.get('password','')
+        email=request.data.get('email','').strip().lower(); key=f"login:{email or request.META.get('REMOTE_ADDR','unknown')}"
+        if cache.get(key, 0) >= 5: return Response({'detail':'This account is temporarily locked. Try again in 15 minutes.'}, status=429)
+        password=request.data.get('password','')
         user=authenticate(request, email=email, password=password)
         if not user:
-            cache.set(key, cache.get(key,0)+1, 300)
+            cache.set(key, cache.get(key,0)+1, 900)
             return Response({'detail':'Invalid email or password.'}, status=status.HTTP_401_UNAUTHORIZED)
         cache.delete(key)
         return auth_result(user, request)
@@ -53,9 +55,33 @@ class ProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     def get_object(self): return self.request.user
 
-def jwt_response(user):
+def jwt_response(user, request=None):
     refresh = RefreshToken.for_user(user)
-    return Response({'access': str(refresh.access_token), 'refresh': str(refresh), 'user': UserSerializer(user).data})
+    jti = refresh.get('jti', '')
+    ip = get_client_ip(request) if request else None
+    ua = request.META.get('HTTP_USER_AGENT', '') if request else ''
+    device = parse_device_info(ua)
+    loc = get_ip_location(ip)
+
+    session = LoginSession.objects.create(
+        user=user,
+        ip_address=ip or None,
+        device=device,
+        user_agent=ua[:512],
+        location=loc,
+        refresh_token_jti=jti,
+    )
+
+    refresh['session_id'] = session.id
+    refresh.access_token['session_id'] = session.id
+
+    return Response({
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
+        'user': UserSerializer(user).data,
+        'session_id': session.id,
+    })
+
 
 class GoogleLoginView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -84,6 +110,33 @@ class GoogleLoginView(APIView):
                         user.set_unusable_password(); user.save(update_fields=['password'])
         except IntegrityError: return Response({'detail': 'Unable to link this Google account. Please try again.'}, status=status.HTTP_409_CONFLICT)
         return auth_result(user, request, is_new=is_new, event_name='GOOGLE_LOGIN')
+
+class AppleLoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+    def post(self, request):
+        client_id = os.getenv('APPLE_CLIENT_ID')
+        token = request.data.get('identity_token')
+        if not client_id: return Response({'detail': 'Apple sign-in is not configured.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        if not token: return Response({'detail': 'Apple identity token is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            header = jwt.get_unverified_header(token)
+            keys = http_requests.get('https://appleid.apple.com/auth/keys', timeout=5).json()['keys']
+            key = next(item for item in keys if item['kid'] == header['kid'])
+            payload = jwt.decode(token, jwt.algorithms.RSAAlgorithm.from_jwk(key), algorithms=['RS256'], audience=client_id, issuer='https://appleid.apple.com')
+        except Exception:
+            return Response({'detail': 'Invalid Apple credential.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not payload.get('sub') or not payload.get('email'): return Response({'detail': 'Apple did not provide a verified email address.'}, status=status.HTTP_400_BAD_REQUEST)
+        User = get_user_model(); is_new = False
+        with transaction.atomic():
+            user = User.objects.filter(apple_id=payload['sub']).first() or User.objects.select_for_update().filter(email__iexact=payload['email']).first()
+            if user:
+                if user.apple_id and user.apple_id != payload['sub']: return Response({'detail': 'This email is linked to another Apple account.'}, status=status.HTTP_409_CONFLICT)
+                user.apple_id = payload['sub']; user.auth_provider = 'email' if user.has_usable_password() else 'apple'; user.save(update_fields=['apple_id', 'auth_provider'])
+            else:
+                base = payload['email'].split('@')[0][:140]; username = base; index = 1
+                while User.objects.filter(username=username).exists(): username = f'{base[:130]}-{index}'; index += 1
+                user = User.objects.create_user(email=payload['email'], username=username, apple_id=payload['sub'], auth_provider='apple'); user.set_unusable_password(); user.save(update_fields=['password']); is_new = True
+        return auth_result(user, request, is_new=is_new, event_name='APPLE_LOGIN')
 
 class ForgotPasswordView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -161,7 +214,7 @@ class MFAVerifyView(APIView):
             if challenge.attempts>=5: challenge.locked_at=timezone.now()
             challenge.save(update_fields=['attempts','locked_at']); event(challenge.user,'MFA_FAILURE',request)
             return Response({'detail':'Invalid verification code.'},status=400)
-        challenge.used_at=timezone.now(); challenge.save(update_fields=['used_at']); event(challenge.user,'MFA_SUCCESS',request); return jwt_response(challenge.user)
+        challenge.used_at=timezone.now(); challenge.save(update_fields=['used_at']); event(challenge.user,'MFA_SUCCESS',request); return jwt_response(challenge.user, request)
 
 class RecoveryCodesView(APIView):
     def post(self,request):
@@ -177,3 +230,57 @@ class TestEmailView(APIView):
         except Exception:return Response({'detail':'Email could not be sent. Check server email configuration.'},status=503)
         finally: request.user.email=original
         return Response({'message':'Test email sent successfully'})
+
+class LoginSessionListView(generics.ListAPIView):
+    serializer_class = LoginSessionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return LoginSession.objects.filter(user=self.request.user, is_revoked=False).order_by('-login_at')
+
+class LoginSessionRevokeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, pk):
+        session = LoginSession.objects.filter(user=request.user, pk=pk, is_revoked=False).first()
+        if not session:
+            return Response({'detail': 'Session not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        session.is_revoked = True
+        session.save(update_fields=['is_revoked'])
+
+        if session.refresh_token_jti:
+            try:
+                from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+                outstanding = OutstandingToken.objects.filter(jti=session.refresh_token_jti).first()
+                if outstanding:
+                    BlacklistedToken.objects.get_or_create(token=outstanding)
+            except Exception:
+                pass
+
+        event(request.user, 'SESSION_REVOKED', request)
+        return Response({'detail': 'Session revoked successfully.'}, status=status.HTTP_200_OK)
+
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        refresh_token = request.data.get('refresh')
+        auth = getattr(request, 'auth', None)
+        session_id = auth.get('session_id') if (auth and (isinstance(auth, dict) or hasattr(auth, 'get'))) else None
+
+        if session_id:
+            LoginSession.objects.filter(user=request.user, pk=session_id).update(is_revoked=True)
+        elif refresh_token:
+            try:
+                token = RefreshToken(refresh_token)
+                jti = token.get('jti')
+                if jti:
+                    LoginSession.objects.filter(user=request.user, refresh_token_jti=jti).update(is_revoked=True)
+                token.blacklist()
+            except Exception:
+                pass
+
+        event(request.user, 'LOGOUT', request)
+        return Response({'detail': 'Logged out successfully.'}, status=status.HTTP_200_OK)
+

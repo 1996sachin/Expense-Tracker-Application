@@ -6,7 +6,12 @@ class User(AbstractUser):
     currency_preference = models.CharField(max_length=3, default=settings.DEFAULT_CURRENCY)
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     google_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    apple_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
     auth_provider = models.CharField(max_length=12, default='email')
+    onboarding_complete = models.BooleanField(default=False)
+    sex = models.CharField(max_length=24, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    language = models.CharField(max_length=12, default='en')
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
@@ -57,3 +62,21 @@ class SecurityEvent(models.Model):
     user_agent = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     class Meta: ordering = ['-created_at']
+
+class LoginSession(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='login_sessions')
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    device = models.CharField(max_length=255, blank=True)
+    user_agent = models.CharField(max_length=512, blank=True)
+    location = models.CharField(max_length=255, blank=True)
+    refresh_token_jti = models.CharField(max_length=255, blank=True, db_index=True)
+    is_revoked = models.BooleanField(default=False)
+    login_at = models.DateTimeField(auto_now_add=True)
+    last_active_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-login_at']
+
+    def __str__(self):
+        return f"{self.user.email} - {self.device} ({self.ip_address})"
+

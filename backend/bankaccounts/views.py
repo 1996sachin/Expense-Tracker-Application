@@ -6,6 +6,8 @@ from .models import BankAccount
 from .serializers import BankAccountSerializer
 class BankAccountViewSet(viewsets.ModelViewSet):
     serializer_class = BankAccountSerializer
+    ordering_fields = ['name', 'current_balance', 'account_type', 'created_at']
+    ordering = ['name']
     def get_queryset(self): return BankAccount.objects.filter(user=self.request.user)
     @action(detail=False)
     def summary(self,request):

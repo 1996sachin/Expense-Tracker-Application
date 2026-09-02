@@ -14,4 +14,5 @@ Pillow>=10.4
 python-dotenv>=1.0
 cryptography>=43.0
 pyotp>=2.9
+PyJWT[crypto]>=2.9
 qrcode[pil]>=8.0

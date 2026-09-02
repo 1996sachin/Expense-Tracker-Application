@@ -6,8 +6,8 @@ from django.utils.timezone import now
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Transaction
-from .serializers import TransactionSerializer
+from .models import Transaction, RecurringTransaction
+from .serializers import TransactionSerializer, RecurringTransactionSerializer
 class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class=TransactionSerializer; filterset_fields=['account','category','type','date']; search_fields=['note','payment_method','tags']; ordering_fields=['date','amount','created_at']
     def get_queryset(self): return Transaction.objects.filter(user=self.request.user).select_related('account','category')
@@ -24,3 +24,31 @@ class TransactionViewSet(viewsets.ModelViewSet):
         trend=[{'date':x['bucket'].strftime('%b %Y'),'income':float(x['income'] or 0),'expense':float(x['expense'] or 0),'savings':float((x['income'] or 0)-(x['expense'] or 0))} for x in qs]
         cats=self.get_queryset().filter(type='expense',date__gte=start).values('category__name').annotate(total=Sum('amount')).order_by('-total')[:8]
         return Response({'trend':trend,'categories':[{'name':x['category__name'] or 'Uncategorized','value':float(x['total'])} for x in cats]})
+
+
+class RecurringTransactionViewSet(viewsets.ModelViewSet):
+    serializer_class = RecurringTransactionSerializer
+    filterset_fields = ['account', 'category', 'type', 'frequency', 'is_active']
+    search_fields = ['note']
+    ordering_fields = [
+        'amount',
+        'next_run_date',
+        'frequency',
+        'category__name',
+        'category',
+        'created_at',
+        'is_active',
+        'start_date',
+    ]
+
+    def get_queryset(self):
+        return RecurringTransaction.objects.filter(user=self.request.user).select_related('account', 'category')
+
+    @action(detail=True, methods=['post'], url_path='toggle')
+    def toggle_active(self, request, pk=None):
+        instance = self.get_object()
+        instance.is_active = not instance.is_active
+        instance.save(update_fields=['is_active'])
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+

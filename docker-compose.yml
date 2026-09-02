@@ -18,13 +18,14 @@ services:
     ports: ["6379:6379"]
   backend:
     build: ./backend
-    command: sh -c "python manage.py makemigrations accounts bankaccounts categories transactions budgets notifications && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: ./entrypoint.sh
     volumes: [./backend:/app]
     ports: ["8001:8000"]
     env_file: .env
     depends_on:
       db: {condition: service_healthy}
       redis: {condition: service_started}
+    restart: unless-stopped
   worker:
     build: ./backend
     command: celery -A config worker -l info
@@ -43,6 +44,7 @@ services:
     ports: ["5175:5173"]
     environment:
       VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      VITE_API_URL: http://localhost:8001/api/
     depends_on: [backend]
 volumes:
   mysql_data:

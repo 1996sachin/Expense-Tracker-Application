@@ -11,3 +11,182 @@
 .security{max-width:850px}.security>p:not(.eyebrow){color:#7e8495;font-size:13px}.security article{background:#fff;border:1px solid #e8eaf1;border-radius:12px;padding:19px;margin:14px 0}.security article h3{font-size:15px;margin:0}.security article p{font-size:12px;color:#858b9c;margin:6px 0 13px}.security .btn,.security button{font-size:12px}.mfa-setup{width:min(460px,100%);background:#fff;border-radius:14px;padding:24px;text-align:center}.mfa-setup h2{font-size:19px}.mfa-setup p{font-size:13px;color:#757b8c}.mfa-setup img{width:185px;margin:8px auto;display:block}.mfa-setup input{width:100%;padding:11px;border:1px solid #dde0e9;border-radius:8px;margin:14px 0}.mfa-setup pre{text-align:left;background:#f5f5fa;padding:12px;border-radius:8px;font-size:12px}
 .account-card{border:1px solid #e8eaf1;border-top:4px solid;border-radius:13px;padding:17px;box-shadow:0 3px 8px rgba(35,38,61,.02)}.account-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}.account-symbol{display:grid;place-items:center;width:31px;height:31px;border-radius:9px;background:#f0edff;color:#6757d5;font-weight:700}.account-card small{font-size:11px;color:#8a90a0;text-transform:capitalize}.account-card h3{margin:5px 0 8px;font-size:15px}.account-card strong{font-size:19px}.account-card p{font-size:11px;color:#9297a7;margin:7px 0 13px}.account-card-actions{display:flex;gap:9px;border-top:1px solid #f0f1f5;padding-top:11px}.account-card-actions button{padding:0;background:transparent;color:#6757d5;font-size:11px}
 .transaction-filters{display:flex;align-items:center;gap:10px;margin-bottom:13px}.transaction-filters select{height:37px;border:1px solid #e0e2eb;border-radius:8px;padding:0 8px;color:#5e6377;background:#fff;font-size:12px}.transaction-filters span{margin-left:auto;font-size:12px;color:#8a90a0}.transaction-head,.transaction-line{display:grid;grid-template-columns:110px 1fr 100px 120px;align-items:center;gap:14px}.transaction-head{padding:10px 0;color:#8e94a4;font-size:10px;text-transform:uppercase;font-weight:700;letter-spacing:.5px}.transaction-line{padding:14px 0;border-top:1px solid #f0f1f5;font-size:12px;color:#5f6578}.transaction-line strong,.transaction-line small{display:block}.transaction-line strong{color:#3e4358}.transaction-line small{font-size:11px;color:#9297a7;margin-top:3px}.transaction-line>b{text-align:right}@media(max-width:700px){.transaction-filters{flex-wrap:wrap}.transaction-filters span{margin-left:0}.transaction-head{display:none}.transaction-line{grid-template-columns:1fr auto}.transaction-line>span,.transaction-line>.badge{display:none}}
+
+/* Sort Controls */
+.sort-control{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#677086;font-weight:600}
+.sort-select{height:36px;padding:0 10px;font-size:12px;border:1px solid #dde0e9;border-radius:8px;background:#fff;color:#454a5e;outline:none}
+
+/* Goal Cards & Grid */
+.goal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:18px}
+.goal-card{background:#fff;border:1px solid #eceef4;border-top:4px solid #6d5dfc;border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px;transition:transform .18s,box-shadow .18s}
+.goal-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(35,38,61,.04)}
+.goal-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.goal-identity{display:flex;align-items:center;gap:10px}
+.goal-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;font-size:18px}
+.goal-identity h3{font-size:15px;margin:0;color:#2c3046}
+.goal-identity small{font-size:11px;color:#8990a3;display:block;margin-top:2px}
+.goal-numbers{display:flex;align-items:baseline;gap:6px}
+.goal-numbers strong{font-size:20px;color:#202538}
+.goal-numbers span{font-size:12px;color:#8b91a2}
+.goal-meta{display:flex;justify-content:space-between;font-size:11px;color:#858c9f}
+.goal-actions{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #f2f3f7;padding-top:12px;margin-top:auto}
+.btn-sm{padding:6px 10px;font-size:11px;border-radius:7px}
+
+/* Pickers */
+.icon-picker{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.picker-btn{padding:6px 10px;background:#f3f4f8;border:1px solid transparent;border-radius:8px;font-size:16px;cursor:pointer}
+.picker-btn.selected{border-color:#6d5dfc;background:#eeebff}
+.color-picker{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.color-btn{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
+.color-btn.selected{border-color:#202538;scale:1.15}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fund-current-info{background:#f6f7fb;padding:12px;border-radius:9px;text-align:center}
+.fund-current-info small{display:block;font-size:11px;color:#8a90a2}
+.fund-current-info strong{font-size:15px;color:#282c40}
+.quick-amount-buttons{display:flex;gap:8px;margin-top:4px}
+.quick-amt-btn{flex:1;padding:8px 0;background:#f0edff;color:#6757d5;font-size:12px;border-radius:8px;font-weight:600}
+.quick-amt-btn:hover{background:#e3dfff}
+
+/* Recurring Transactions Table */
+.recurring-list{display:grid;margin-top:12px}
+.recurring-head{display:grid;grid-template-columns:85px 2fr 100px 130px 120px 150px;align-items:center;gap:12px;padding:10px 0;color:#8e94a4;font-size:10px;text-transform:uppercase;font-weight:700;letter-spacing:.5px}
+.recurring-row{display:grid;grid-template-columns:85px 2fr 100px 130px 120px 150px;align-items:center;gap:12px;padding:14px 0;border-top:1px solid #f0f1f5;font-size:12px;color:#5f6578}
+.recurring-row.paused{opacity:.65}
+.recurring-details strong{display:block;font-size:13px;color:#393e54}
+.recurring-details small{display:block;font-size:11px;color:#9297a7;margin-top:2px}
+.recurring-date span{display:block;font-size:12px;color:#454a5e}
+.recurring-date small{display:block;font-size:11px;color:#8f95a6}
+.recurring-amount{text-align:right;font-size:13px}
+.recurring-actions{display:flex;gap:10px;justify-content:flex-end}
+.recurring-actions button{padding:0;background:transparent;color:#6656d7;font-size:11px;cursor:pointer}
+
+@media(max-width:850px){
+  .recurring-head{display:none}
+  .recurring-row{grid-template-columns:1fr auto;gap:8px}
+  .recurring-badge-col,.recurring-freq,.recurring-date{display:none}
+}
+
+/* Tabs & Navigation */
+.tab-nav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid #e7e9f2;
+  padding-bottom: 12px;
+}
+.tab-btn {
+  background: transparent;
+  color: #71788e;
+  border: 0;
+  padding: 8px 18px;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.tab-btn:hover {
+  color: #3b3266;
+  background: #ebeaf5;
+}
+.tab-btn.active {
+  background: #6d5dfc;
+  color: #fff;
+}
+
+/* Danger Button */
+.btn-danger, .btn.danger {
+  background: #e6506f;
+  color: #fff;
+  border: 0;
+  box-shadow: 0 4px 12px rgba(230, 80, 111, 0.25);
+}
+.btn-danger:hover, .btn.danger:hover {
+  background: #d43d5c;
+  transform: translateY(-1px);
+}
+
+/* Session List / Login Activity */
+.session-list {
+  display: grid;
+  gap: 0;
+}
+.session-row {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 0;
+  border-top: 1px solid #f0f1f5;
+}
+.session-row:first-child {
+  border-top: none;
+}
+.session-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #f0edff;
+  font-size: 20px;
+}
+.session-info {
+  display: grid;
+  gap: 4px;
+}
+.session-title-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.session-title-line strong {
+  font-size: 14px;
+  color: #30344d;
+}
+.session-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #8b91a2;
+}
+.session-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.session-current-label {
+  font-size: 12px;
+  color: #1d936f;
+  font-weight: 600;
+}
+.revoke-btn {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid #ffd5dc;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.revoke-btn:hover {
+  background: #fff0f3;
+}
+@media(max-width: 700px) {
+  .session-row {
+    grid-template-columns: 36px 1fr;
+    gap: 12px;
+  }
+  .session-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+  .session-action {
+    grid-column: 2;
+    margin-top: 4px;
+  }
+}
