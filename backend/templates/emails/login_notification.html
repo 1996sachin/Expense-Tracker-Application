@@ -1,0 +1,1 @@
+{% extends "emails/base.html" %}{% block content %}<h1 style="font-size:24px">New sign-in</h1><p>Hi {{ username }},</p><p>Your Pocketly account was just signed in.</p><p><b>Time:</b> {{ login_time }}<br><b>IP address:</b> {{ ip_address }}</p><p>If this wasn't you, reset your password immediately.</p>{% endblock %}
