@@ -94,6 +94,76 @@
   color: #fff;
 }
 
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --workspace-bg: #151822;
+  --surface: #202431;
+  --surface-muted: #292e3d;
+  --border: #363c4d;
+  --text: #edf0f7;
+  --text-muted: #aab1c2;
+}
+:root[data-theme='dark'] body,
+:root[data-theme='dark'] .app-shell {
+  background: var(--workspace-bg);
+  color: var(--text);
+}
+:root[data-theme='dark'] .topbar {
+  border-color: var(--border);
+}
+:root[data-theme='dark'] .crumb,
+:root[data-theme='dark'] .eyebrow,
+:root[data-theme='dark'] .setting-card p,
+:root[data-theme='dark'] .details dt,
+:root[data-theme='dark'] .security article p {
+  color: var(--text-muted);
+}
+:root[data-theme='dark'] .crumb strong,
+:root[data-theme='dark'] .setting-card h3,
+:root[data-theme='dark'] .details dd,
+:root[data-theme='dark'] .details h3,
+:root[data-theme='dark'] .profile-card h2 {
+  color: var(--text);
+}
+:root[data-theme='dark'] .card,
+:root[data-theme='dark'] .setting-card,
+:root[data-theme='dark'] .profile-card,
+:root[data-theme='dark'] .security article,
+:root[data-theme='dark'] .mfa-setup,
+:root[data-theme='dark'] .global-search,
+:root[data-theme='dark'] .range-select,
+:root[data-theme='dark'] select,
+:root[data-theme='dark'] input {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+:root[data-theme='dark'] .tab-nav {
+  border-color: var(--border);
+}
+:root[data-theme='dark'] .tab-btn {
+  color: var(--text-muted);
+}
+:root[data-theme='dark'] .tab-btn:hover {
+  color: var(--text);
+  background: #343a4c;
+}
+:root[data-theme='dark'] .setting-line {
+  border-color: var(--border);
+}
+:root[data-theme='dark'] .data-row,
+:root[data-theme='dark'] .transaction-line,
+:root[data-theme='dark'] .recurring-row {
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+:root[data-theme='dark'] .data-row strong,
+:root[data-theme='dark'] .transaction-line strong,
+:root[data-theme='dark'] .recurring-details strong,
+:root[data-theme='dark'] .recurring-date span {
+  color: var(--text);
+}
+
 /* Danger Button */
 .btn-danger, .btn.danger {
   background: #e6506f;
@@ -188,5 +258,48 @@
   .session-action {
     grid-column: 2;
     margin-top: 4px;
+  }
+}
+
+/* Auth polish */
+.auth {
+  background:
+    radial-gradient(circle at 8% 12%, rgba(109, 93, 252, 0.2), transparent 30%),
+    radial-gradient(circle at 92% 88%, rgba(40, 184, 149, 0.12), transparent 28%),
+    linear-gradient(135deg, #f3f1ff 0%, #fbfbff 52%, #eef8f7 100%);
+}
+.auth-card {
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 28px 70px rgba(43, 35, 93, 0.16), 0 4px 12px rgba(43, 35, 93, 0.06);
+}
+.auth-logo {
+  letter-spacing: 0;
+  transition: transform 0.2s ease;
+}
+.auth-logo:hover {
+  transform: translateY(-1px);
+}
+.auth-heading h1 {
+  letter-spacing: -0.3px;
+}
+.auth-form .primary,
+.auth-primary {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.auth-form .primary:hover,
+.auth-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 20px rgba(109, 93, 252, 0.28);
+}
+.auth-card input:focus {
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-logo,
+  .auth-form .primary,
+  .auth-primary,
+  .auth-card input {
+    transition: none;
   }
 }

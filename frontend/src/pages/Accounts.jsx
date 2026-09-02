@@ -36,6 +36,7 @@ const editPayload = (form) => ({
   bank_name: form.bank_name,
   account_type: form.account_type,
   currency: form.currency,
+  current_balance: form.current_balance,
   color: form.color,
 });
 
@@ -83,12 +84,15 @@ export default function Accounts() {
             {[
               ['name', 'Account name'],
               ['bank_name', 'Bank name'],
-              ...(editing ? [] : [['opening_balance', 'Opening balance']]),
+              ...(editing
+                ? [['current_balance', 'Current balance']]
+                : [['opening_balance', 'Opening balance']]),
             ].map(([k, l]) => (
               <input
                 key={k}
                 placeholder={l}
-                type={k === 'opening_balance' ? 'number' : 'text'}
+                type={k === 'opening_balance' || k === 'current_balance' ? 'number' : 'text'}
+                step={k === 'current_balance' ? '0.01' : undefined}
                 value={form[k] ?? ''}
                 onChange={(e) => setForm({ ...form, [k]: e.target.value })}
               />
@@ -116,11 +120,6 @@ export default function Accounts() {
                 ))}
               </select>
             </label>
-            {editing && (
-              <p className="field-hint">
-                Current balance: {form.current_balance} {form.currency}
-              </p>
-            )}
             <div>
               <button disabled={save.isPending}>{save.isPending ? 'Saving…' : 'Save account'}</button>
               <button type="button" className="plain" onClick={() => setForm(null)}>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -8,6 +8,7 @@ import Security from './Security';
 import LoginActivity from './LoginActivity';
 
 const list = (d) => d?.results || d || [];
+const THEME_STORAGE_KEY = 'pocketly-theme';
 
 export function Categories() {
   const qc = useQueryClient();
@@ -230,6 +231,20 @@ export function Profile({ defaultTab = 'profile' }) {
   const qc = useQueryClient();
   const loc = useLocation();
   const nav = useNavigate();
+  const [theme, setTheme] = useState(() => localStorage.getItem(THEME_STORAGE_KEY) || 'system');
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const applyTheme = () => {
+      const isDark = theme === 'dark' || (theme === 'system' && mediaQuery.matches);
+      document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+    };
+
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+    applyTheme();
+    if (theme === 'system') mediaQuery.addEventListener('change', applyTheme);
+    return () => mediaQuery.removeEventListener('change', applyTheme);
+  }, [theme]);
 
   // Determine active tab from URL path or prop
   let activeTab = defaultTab;
@@ -413,7 +428,7 @@ export function Profile({ defaultTab = 'profile' }) {
             <p>Choose the interface theme that best fits your workflow.</p>
             <label className="setting-line" style={{ display: 'grid', gap: '6px' }}>
               <span>Workspace theme</span>
-              <select defaultValue="system">
+              <select value={theme} onChange={(e) => setTheme(e.target.value)}>
                 <option value="system">System default</option>
                 <option value="light">Light mode</option>
                 <option value="dark">Dark mode</option>

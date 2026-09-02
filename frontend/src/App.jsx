@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Dashboard from './pages/Dashboard';
@@ -9,8 +9,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import MFA from './pages/MFA';
 import Budgets from './pages/Budgets';
-import LoginActivity from './pages/LoginActivity';
-import { Categories, Goals, Profile, Recurring, Reports, Settings } from './pages/Hubs';
+import { Categories, Goals, Profile, Recurring, Reports } from './pages/Hubs';
 import api from './api';
 import { Avatar, Button, Icon, Modal } from './components/UI';
 
@@ -33,20 +32,6 @@ const nav = [
       ['/goals', 'goals', 'Goals'],
     ],
   ],
-  [
-    'SECURITY',
-    [
-      ['/login-activity', 'activity', 'Login activity'],
-    ],
-  ],
-  [
-    'ACCOUNT',
-    [
-      ['/profile', 'profile', 'Profile'],
-      ['/settings', 'settings', 'Settings'],
-      ['/notifications', 'notifications', 'Notifications'],
-    ],
-  ],
 ];
 
 const pageTitles = {
@@ -58,12 +43,15 @@ const pageTitles = {
   '/categories': 'Categories',
   '/recurring': 'Recurring transactions',
   '/goals': 'Goals',
-  '/login-activity': 'Login activity',
   '/profile': 'Profile',
+  '/profile/general': 'General',
+  '/profile/notifications': 'Notifications',
+  '/profile/appearance': 'Appearance',
+  '/profile/privacy': 'Privacy',
   '/profile/security': 'Security',
-  '/settings': 'Settings',
-  '/notifications': 'Notifications',
+  '/profile/login-activity': 'Login activity',
 };
+const THEME_STORAGE_KEY = 'pocketly-theme';
 
 function Shell() {
   const [open, setOpen] = useState(false);
@@ -71,6 +59,19 @@ function Shell() {
   const [confirmSignout, setConfirmSignout] = useState(false);
   const loc = useLocation();
   const navg = useNavigate();
+
+  useEffect(() => {
+    const theme = localStorage.getItem(THEME_STORAGE_KEY) || 'system';
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const applyTheme = () => {
+      const isDark = theme === 'dark' || (theme === 'system' && mediaQuery.matches);
+      document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+    };
+
+    applyTheme();
+    if (theme === 'system') mediaQuery.addEventListener('change', applyTheme);
+    return () => mediaQuery.removeEventListener('change', applyTheme);
+  }, []);
   const me = useQuery({
     queryKey: ['me'],
     queryFn: () => api.get('auth/me/').then((r) => r.data),
@@ -120,9 +121,16 @@ function Shell() {
           ))}
         </nav>
         <div className="side-user">
-          <Avatar user={me.data} />
-          <div>
+          <NavLink
+            className="side-user-profile"
+            to="/profile"
+            onClick={() => setOpen(false)}
+            aria-label="Open profile"
+          >
+            <Avatar user={me.data} />
             <strong>{me.data?.name || 'Your account'}</strong>
+          </NavLink>
+          <div>
             <button type="button" onClick={() => setConfirmSignout(true)}>
               Sign out
             </button>
@@ -185,16 +193,16 @@ function Shell() {
                   type="button"
                   onClick={() => {
                     setMenu(false);
-                    navg('/settings');
+                    navg('/profile/general');
                   }}
                 >
-                  Settings
+                  General
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     setMenu(false);
-                    navg('/login-activity');
+                    navg('/profile/login-activity');
                   }}
                 >
                   Login activity
@@ -223,13 +231,19 @@ function Shell() {
           <Route path="/categories" element={<Categories />} />
           <Route path="/recurring" element={<Recurring />} />
           <Route path="/goals" element={<Goals />} />
-          <Route path="/login-activity" element={<LoginActivity />} />
           <Route path="/profile" element={<Profile defaultTab="profile" />} />
+          <Route path="/profile/general" element={<Profile defaultTab="general" />} />
+          <Route path="/profile/notifications" element={<Profile defaultTab="notifications" />} />
+          <Route path="/profile/appearance" element={<Profile defaultTab="appearance" />} />
+          <Route path="/profile/privacy" element={<Profile defaultTab="privacy" />} />
           <Route path="/profile/security" element={<Profile defaultTab="security" />} />
+          <Route path="/profile/login-activity" element={<Profile defaultTab="login-activity" />} />
+          <Route path="/profile/activity" element={<Navigate to="/profile/login-activity" replace />} />
+          <Route path="/login-activity" element={<Navigate to="/profile/login-activity" replace />} />
           <Route path="/settings/security" element={<Navigate to="/profile/security" replace />} />
           <Route path="/settings/profile/security" element={<Navigate to="/profile/security" replace />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/notifications" element={<Settings />} />
+          <Route path="/settings" element={<Navigate to="/profile/general" replace />} />
+          <Route path="/notifications" element={<Navigate to="/profile/notifications" replace />} />
         </Routes>
       </main>
 
