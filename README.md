@@ -74,6 +74,16 @@ Pocketly brings accounts, transactions, budgets, recurring payments, and spendin
 
 MySQL is available on host port `3307`; services within Docker use `db:3306`.
 
+### Access from another device on your network
+
+Set `FRONTEND_ORIGIN` and `VITE_API_URL` in `.env` to the Docker host's LAN address, then restart the services:
+
+```bash
+docker compose up -d --build
+```
+
+Open `http://<HOST-LAN-IP>:5175` on the other device. The API is available at `http://<HOST-LAN-IP>:8001/api/`. Both devices must be on the same network, and the host firewall must allow TCP ports `5175` and `8001`.
+
 ## API overview
 
 | Area | Endpoints |

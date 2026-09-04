@@ -44,7 +44,7 @@ services:
     ports: ["5175:5173"]
     environment:
       VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      VITE_API_URL: http://localhost:8001/api/
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8001/api/}
     depends_on: [backend]
 volumes:
   mysql_data:
