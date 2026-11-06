@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from .models import Transaction
 from .serializers import TransactionSerializer
 class TransactionViewSet(viewsets.ModelViewSet):
-    serializer_class=TransactionSerializer; filterset_fields=['account','category','type','date']; search_fields=['note','payment_method','tags']; ordering_fields=['date','amount','created_at']
+    serializer_class=TransactionSerializer; filterset_fields=['account','category','type','date']; search_fields=['note','payment_method','tags','merchant','reference_id']; ordering_fields=['date','amount','created_at']
     def get_queryset(self): return Transaction.objects.filter(user=self.request.user).select_related('account','category')
     def perform_create(self, serializer):
         with db_transaction.atomic(): serializer.save()

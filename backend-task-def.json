@@ -1,0 +1,86 @@
+{
+  "family": "expense-app",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "2048",
+  "memory": "4096",
+  "executionRoleArn": "arn:aws:iam::071750954511:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::071750954511:role/ecsTaskExecutionRole",
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "containerDefinitions": [
+    {
+      "name": "mysql",
+      "image": "public.ecr.aws/docker/library/mysql:8.4",
+      "essential": true,
+      "portMappings": [{"containerPort": 3306, "protocol": "tcp"}],
+      "environment": [
+        {"name": "MYSQL_DATABASE", "value": "expense_tracker"},
+        {"name": "MYSQL_USER", "value": "expense_user"}
+      ],
+      "secrets": [
+        {"name": "MYSQL_PASSWORD", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:MYSQL_PASSWORD::"},
+        {"name": "MYSQL_ROOT_PASSWORD", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:MYSQL_ROOT_PASSWORD::"}
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 5,
+        "startPeriod": 120
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/expense-app",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "mysql"
+        }
+      }
+    },
+    {
+      "name": "django",
+      "image": "071750954511.dkr.ecr.ap-south-1.amazonaws.com/expense-backend:latest",
+      "essential": true,
+      "portMappings": [{"containerPort": 8000, "protocol": "tcp"}],
+      "environment": [
+        {"name": "MYSQL_HOST", "value": "127.0.0.1"},
+        {"name": "MYSQL_PORT", "value": "3306"},
+        {"name": "PYTHONUNBUFFERED", "value": "1"}
+      ],
+      "secrets": [
+        {"name": "DJANGO_SECRET_KEY", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:DJANGO_SECRET_KEY::"},
+        {"name": "DJANGO_DEBUG", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:DJANGO_DEBUG::"},
+        {"name": "DJANGO_ALLOWED_HOSTS", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:DJANGO_ALLOWED_HOSTS::"},
+        {"name": "MYSQL_DATABASE", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:MYSQL_DATABASE::"},
+        {"name": "MYSQL_USER", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:MYSQL_USER::"},
+        {"name": "MYSQL_PASSWORD", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:MYSQL_PASSWORD::"},
+        {"name": "FRONTEND_ORIGIN", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:FRONTEND_ORIGIN::"},
+        {"name": "EMAIL_BACKEND", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:EMAIL_BACKEND::"},
+        {"name": "EMAIL_HOST", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:EMAIL_HOST::"},
+        {"name": "EMAIL_PORT", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:EMAIL_PORT::"},
+        {"name": "EMAIL_HOST_USER", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:EMAIL_HOST_USER::"},
+        {"name": "EMAIL_HOST_PASSWORD", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:EMAIL_HOST_PASSWORD::"},
+        {"name": "EMAIL_USE_TLS", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:EMAIL_USE_TLS::"},
+        {"name": "DEFAULT_FROM_EMAIL", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:DEFAULT_FROM_EMAIL::"},
+        {"name": "MFA_ENCRYPTION_KEY", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:MFA_ENCRYPTION_KEY::"},
+        {"name": "MFA_CHALLENGE_TIMEOUT_MINUTES", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:MFA_CHALLENGE_TIMEOUT_MINUTES::"},
+        {"name": "PASSWORD_RESET_TIMEOUT_MINUTES", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:PASSWORD_RESET_TIMEOUT_MINUTES::"},
+        {"name": "SEND_LOGIN_NOTIFICATION_EMAIL", "valueFrom": "arn:aws:secretsmanager:ap-south-1:071750954511:secret:expense-tracker/prod-ojyv4p:SEND_LOGIN_NOTIFICATION_EMAIL::"}
+      ],
+      "dependsOn": [
+        {"containerName": "mysql", "condition": "HEALTHY"}
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/expense-app",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "django"
+        }
+      }
+    }
+  ]
+}

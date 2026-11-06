@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('bankaccounts', '0002_bankaccount_currency_default_npr'),
-        ('categories', '0002_category_icon_position'),
+        ('categories', '0001_initial'),
         ('transactions', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
